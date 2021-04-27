@@ -1,0 +1,142 @@
+<script type="text/discourse-plugin" version="0.8.42">
+let componentSelector = 'div[data-masonry-gallery]',
+    componentName = 'data-masonry-gallery',
+    padding = 6,
+    documentWidth = document.documentElement.clientWidth,
+    mobileView = !!document.querySelector("html.mobile-view"),
+    defaultOrder = settings.image_order;
+
+let cookedWidth = 690,
+    previwWidth = 690,
+    numberOfColumns = window.matchMedia('(max-width: 774px)').matches ? 2 : 3;
+if (mobileView && documentWidth > 890) {
+  numberOfColumns = 2;
+  cookedWidth = 550;
+  previwWidth = 550;
+} else if (mobileView) {
+  cookedWidth = documentWidth - 21;
+  previwWidth = documentWidth - 20;
+} else if (documentWidth < 758) {
+  cookedWidth = documentWidth - 70;
+  previwWidth = documentWidth - 418;
+} else if (documentWidth < 774) {
+  cookedWidth = documentWidth - 86;
+  previwWidth = documentWidth * 0.43;
+} else if (documentWidth < 865) {
+  previwWidth = documentWidth * 0.43;
+} else if (documentWidth < 1475) {
+  previwWidth = documentWidth * 0.45;
+}
+
+let cookedColumnWidth = Math.floor((cookedWidth - numberOfColumns * padding) / numberOfColumns);
+let previewColumnWidth = Math.floor((previwWidth - numberOfColumns * padding) / numberOfColumns);
+
+
+let translations = I18n.translations[I18n.currentLocale()].js;
+
+if (!translations) {
+  translations = {};
+}
+if (!translations.composer) {
+  translations.composer = {};
+}
+translations.button_text = settings.button_text;
+translations.composer.add_images_prompt =
+  settings.add_images_prompt;
+
+
+function getVerticalOrderHeight(heightsArray, numberOfColumns) {
+  if (heightsArray.length == 0) return 0;
+  if (heightsArray.length <= numberOfColumns) return Math.max.apply(null, heightsArray);
+  if (numberOfColumns == 1) return heightsArray.reduce((a, b) => a + b, 0);
+
+  let previousHighestColumn = 0;
+  for (let i = 0; i < heightsArray.length; i++) {
+    let columnHeight1 = getVerticalOrderHeight(heightsArray.slice(0, i+1), 1);
+    let columnHeight2 = getVerticalOrderHeight(heightsArray.slice(i+1), numberOfColumns - 1);
+
+    if (columnHeight1 >= columnHeight2) {
+      return i == 0 ? columnHeight1 : Math.min(previousHighestColumn, columnHeight1);
+    }
+
+    previousHighestColumn = columnHeight2;
+  }
+}
+
+function componentPrep(cooked) {
+  let className = cooked.className;
+  if (className != "d-editor-preview" && className != "cooked") return;
+
+  let columnWidth = className == "cooked" ? cookedColumnWidth : previewColumnWidth;
+
+  cooked.querySelectorAll(componentSelector).forEach(gallery => {
+    let images = gallery.querySelectorAll(".lightbox-wrapper, img:not(a > img)");
+
+    if (images.length == 0) return;
+
+    let horizontalOrder = defaultOrder.startsWith("h");
+    let attributeValue = gallery.getAttribute(componentName);
+    if (attributeValue.startsWith("v")) horizontalOrder = false;
+    if (attributeValue.startsWith("h")) horizontalOrder = true;
+
+    while (gallery.firstChild) {
+      gallery.firstChild.remove()
+    }
+
+    let imageHeightsWithPaddingGrid = [[],[],[]];
+
+    images.forEach(function(image, index) {
+      if (horizontalOrder) image.style.order = 1 + index % numberOfColumns;
+
+      gallery.appendChild(image);
+
+      let insideImage = image.getElementsByTagName("img");
+      let newHeight;
+      if (insideImage.length != 0) {
+        newHeight = Math.floor(insideImage[0].height * columnWidth / insideImage[0].width);
+      } else {
+        newHeight = Math.floor(image.height * columnWidth / image.width);
+      }
+
+      image.style.height = newHeight + "px";
+      image.style.width = columnWidth + "px";
+
+      imageHeightsWithPaddingGrid[horizontalOrder? index % numberOfColumns : 0].push(newHeight + padding);
+    });
+
+    let highestColumnWithPadding = 0;
+    if (horizontalOrder) {
+      let columnHeightsWithPadding = imageHeightsWithPaddingGrid.map(imageCol => { return imageCol.reduce((a, b) => a + b, 0); });
+      highestColumnWithPadding = Math.max.apply(null, columnHeightsWithPadding);
+    } else {
+      highestColumnWithPadding = getVerticalOrderHeight(imageHeightsWithPaddingGrid[0], numberOfColumns);
+    }
+
+    gallery.style.height = highestColumnWithPadding + "px";
+  });
+};
+
+
+api.decorateCookedElement(componentPrep, {
+  onlyStream: false, 
+  id: 'masonry-gallery'
+});
+
+
+api.onToolbarCreate(function(toolbar) {
+  toolbar.addButton({
+    trimLeading: true,
+    id: "masonry-gallery",
+    group: "insertions",
+    icon: settings.button_icon,
+    title: "button_text",
+    perform: e => e.applySurround(
+      "<div data-masonry-gallery>\n\n",
+      "\n\n</div>",
+      "add_images_prompt",
+      { multiline: false }
+    )
+  });
+});
+
+</script>

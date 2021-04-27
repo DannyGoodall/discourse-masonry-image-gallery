@@ -1,0 +1,11 @@
+button_text:
+  default: "Image Gallery"
+add_images_prompt:
+  default: "Add images"
+button_icon:
+  default: "th"
+image_order:
+  default: horizontal
+  type: enum
+  choices:
+    - vertical

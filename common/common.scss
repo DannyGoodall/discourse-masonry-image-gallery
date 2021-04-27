@@ -1,0 +1,44 @@
+// Cooked view and editor preview
+
+.cooked, .d-editor-preview { 
+  div[data-masonry-gallery] {
+    display: flex;
+    flex-flow: column wrap;
+    align-content: flex-start;
+
+    &::before,
+    &::after {
+      content: "";
+      flex-basis: 100%;
+      width: 0;
+      order: 2;
+    }
+
+    .lightbox-wrapper, > img {
+      padding: 3px;
+      max-height: unset !important;
+    }
+
+    .lightbox, .lightbox img {
+      width: 100%;
+      height: 100%;
+      max-height: unset !important;
+
+      .meta {
+        .informations { 
+          display: none;
+        }
+        .filename {
+          flex-grow: 3;
+          font-size: 0.8em;
+        }
+      }
+    }
+  }
+}
+
+// Bio composer
+
+.bio-composer .masonry-gallery {
+  display: none;
+}
