@@ -74,10 +74,12 @@ function componentPrep(cooked) {
 
     if (images.length == 0) return;
 
+    let gridView = false;
     let horizontalOrder = defaultOrder.startsWith("h");
     let attributeValue = gallery.getAttribute(componentName);
     if (attributeValue.startsWith("v")) horizontalOrder = false;
     if (attributeValue.startsWith("h")) horizontalOrder = true;
+    if (attributeValue.startsWith("g")) gridView = true;
 
     while (gallery.firstChild) {
       gallery.firstChild.remove()
@@ -86,7 +88,7 @@ function componentPrep(cooked) {
     let imageHeightsWithPaddingGrid = [[],[],[]];
 
     images.forEach(function(image, index) {
-      if (horizontalOrder) image.style.order = 1 + index % numberOfColumns;
+      if (horizontalOrder && !gridView) image.style.order = 1 + index % numberOfColumns;
 
       gallery.appendChild(image);
 
@@ -103,6 +105,8 @@ function componentPrep(cooked) {
 
       imageHeightsWithPaddingGrid[horizontalOrder? index % numberOfColumns : 0].push(newHeight + padding);
     });
+
+    if (gridView) return;
 
     let highestColumnWithPadding = 0;
     if (horizontalOrder) {

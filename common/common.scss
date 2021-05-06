@@ -6,6 +6,10 @@
     flex-flow: column wrap;
     align-content: flex-start;
 
+    &[data-masonry-gallery^="g"] {
+      flex-flow: row wrap;
+    }
+
     &::before,
     &::after {
       content: "";
