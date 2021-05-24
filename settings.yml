@@ -9,3 +9,12 @@ image_order:
   type: enum
   choices:
     - vertical
+auto_enabled:
+  default: false
+auto_images_required:
+  default: 3
+  min: 1
+auto_enabled_categories:
+  default: ""
+  type: list
+  list_type: simple

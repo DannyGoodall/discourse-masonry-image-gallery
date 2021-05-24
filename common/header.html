@@ -4,7 +4,11 @@ let componentSelector = 'div[data-masonry-gallery]',
     padding = 6,
     documentWidth = document.documentElement.clientWidth,
     mobileView = !!document.querySelector("html.mobile-view"),
-    defaultOrder = settings.image_order;
+    defaultOrder = settings.image_order,
+    autoGalleryEnabled = settings.auto_enabled,
+    autoImagesRequired = settings.auto_images_required,
+    autoEnabledCategories = settings.auto_enabled_categories.toLowerCase().split('|');
+
 
 let cookedWidth = 690,
     previwWidth = 690,
@@ -45,6 +49,29 @@ translations.composer.add_images_prompt =
   settings.add_images_prompt;
 
 
+let previewCategory = "",
+    cookedCategory = "";
+if (autoGalleryEnabled) {
+  const { observes } = require('discourse-common/utils/decorators');
+
+  api.modifyClass("controller:composer", {
+    @observes('model.categoryId')
+    storePreviewCategory() {
+      let categoryName = this.get("model.category.name");
+      previewCategory = categoryName == null ? "" : categoryName.toLowerCase();
+    }
+  });
+
+  api.modifyClass("component:discourse-topic", {
+    didInsertElement: function() {
+      this._super();
+      let categoryName = this.get("topic.category.name");
+      cookedCategory = categoryName == null ? "" : categoryName.toLowerCase();
+    }
+  });
+}
+
+
 function getVerticalOrderHeight(heightsArray, numberOfColumns) {
   if (heightsArray.length == 0) return 0;
   if (heightsArray.length <= numberOfColumns) return Math.max.apply(null, heightsArray);
@@ -63,15 +90,78 @@ function getVerticalOrderHeight(heightsArray, numberOfColumns) {
   }
 }
 
+
+function addComponentSelector(cooked) {
+  let nonGalleryDiv = "div:not([data-masonry-gallery])";
+  let nonThumbnailImg = "img:not(.emoji)" +
+                           ":not(.thumbnail)" +
+                           ":not(.site-icon)" +
+                           ":not(.avatar)" +
+                           ":not(.ytp-thumbnail-image)" +
+                           ":not(.instagram-image)";
+  let elementSelectorBase = nonGalleryDiv + " > br, " +
+                            nonGalleryDiv + " > p, " +
+                            nonGalleryDiv + " > p > br, ";
+  let cookedSelector = nonGalleryDiv + " > .lightbox-wrapper, " +
+                       nonGalleryDiv + " > " + nonThumbnailImg + ", " +
+                       nonGalleryDiv + " > p > " + nonThumbnailImg;
+  let previewSelector = nonGalleryDiv + " > p > .image-wrapper";
+  let isCooked = cooked.className == "cooked";
+
+  let galleryArray = [];
+  let imageCount = 0;
+  let doubleBR = false;
+
+  let numberOfImages = cooked.querySelectorAll(isCooked? cookedSelector : previewSelector).length;
+  if (numberOfImages < autoImagesRequired) return;
+
+  let elements = cooked.querySelectorAll(elementSelectorBase += isCooked? cookedSelector : previewSelector);
+  elements.forEach((element, index, array) => {
+    if (element.tagName == "IMG" || element.classList.contains("lightbox-wrapper") || element.classList.contains("image-wrapper")) {
+      galleryArray.push(element);
+      imageCount++;
+    }
+
+    if (element.tagName == "BR" && galleryArray.length != 0) {
+      if (galleryArray.slice(-1)[0].tagName == "BR") {
+          doubleBR = true;
+      } else {
+          galleryArray.push(element);
+      }
+    }
+
+    if (element.tagName == "P" || index == (array.length - 1) || doubleBR) {
+      if (imageCount != 0 && imageCount >= autoImagesRequired) {
+        let galleryDiv = document.createElement('div');
+        galleryDiv.setAttribute(componentName, "");
+        galleryArray[0].parentNode.insertBefore(galleryDiv, galleryArray[0]);
+        galleryArray.map(element => galleryDiv.appendChild(element));
+      }
+
+      galleryArray=[];
+      imageCount = 0;
+      doubleBR = false;
+    }
+  });
+}
+
+
 function componentPrep(cooked) {
   let className = cooked.className;
   if (className != "d-editor-preview" && className != "cooked") return;
 
   let columnWidth = className == "cooked" ? cookedColumnWidth : previewColumnWidth;
 
-  cooked.querySelectorAll(componentSelector).forEach(gallery => {
-    let images = gallery.querySelectorAll(".lightbox-wrapper, img:not(a > img)");
+  let allCategoriesAutoEnabled = autoEnabledCategories == "";
+  let cookedCategoryEnabled = className == "cooked" && autoEnabledCategories.includes(cookedCategory);
+  let previewCategoryEnabled = className == "d-editor-preview" && autoEnabledCategories.includes(previewCategory);
 
+  if (autoGalleryEnabled && (allCategoriesAutoEnabled || cookedCategoryEnabled || previewCategoryEnabled)) {
+    addComponentSelector(cooked);
+  }
+
+  cooked.querySelectorAll(componentSelector).forEach(gallery => {
+    let images = gallery.querySelectorAll(".lightbox-wrapper, p > img, div > img, .image-wrapper > img");
     if (images.length == 0) return;
 
     let gridView = false;

@@ -6,3 +6,6 @@ en:
       image_order: Choose the default order of the images.
       button_text: Enter the text that appears when the user hovers over the button in the composer.
       add_images_prompt: Enter the placeholder text that appears in the composer after the user clicks the button.
+      auto_enabled: Enable the functionality to create galleries automatically.
+      auto_images_required: Set minimum number of images required (without any other element or empty line between them) for a gallery to be automatically created.
+      auto_enabled_categories: Specify which categories should create galleries automatically. By default, every category is enabled.
