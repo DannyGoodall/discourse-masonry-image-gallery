@@ -18,3 +18,6 @@ auto_enabled_categories:
   default: ""
   type: list
   list_type: simple
+max_columns:
+  default: 5
+  min: 3

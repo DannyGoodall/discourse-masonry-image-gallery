@@ -1,4 +1,4 @@
-<script type="text/discourse-plugin" version="0.8.42">
+//<script type="text/discourse-plugin" version="0.8.42">
 let componentSelector = 'div[data-masonry-gallery]',
     componentName = 'data-masonry-gallery',
     padding = 6,
@@ -7,14 +7,15 @@ let componentSelector = 'div[data-masonry-gallery]',
     defaultOrder = settings.image_order,
     autoGalleryEnabled = settings.auto_enabled,
     autoImagesRequired = settings.auto_images_required,
-    autoEnabledCategories = settings.auto_enabled_categories.toLowerCase().split('|');
+    autoEnabledCategories = settings.auto_enabled_categories.toLowerCase().split('|'),
+    max_columns = settings.max_columns;
 
 
 let cookedWidth = 690,
     previwWidth = 690,
-    numberOfColumns = window.matchMedia('(max-width: 774px)').matches ? 2 : 3;
+    numberOfColumns = window.matchMedia('(max-width: 774px)').matches ? max_columns-1 : max_columns;
 if (mobileView && documentWidth > 890) {
-  numberOfColumns = 2;
+  numberOfColumns = max_columns-1;
   cookedWidth = 550;
   previwWidth = 550;
 } else if (mobileView) {
@@ -233,4 +234,4 @@ api.onToolbarCreate(function(toolbar) {
   });
 });
 
-</script>
+//</script>
