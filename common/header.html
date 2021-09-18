@@ -12,9 +12,9 @@ let componentSelector = 'div[data-masonry-gallery]',
 
 let cookedWidth = 690,
     previwWidth = 690,
-    numberOfColumns = window.matchMedia('(max-width: 774px)').matches ? 2 : 3;
+    numberOfColumns = window.matchMedia('(max-width: 774px)').matches ? settings.max_columns-1 : settings.max_columns;
 if (mobileView && documentWidth > 890) {
-  numberOfColumns = 2;
+  numberOfColumns = settings.max_columns-1;
   cookedWidth = 550;
   previwWidth = 550;
 } else if (mobileView) {
