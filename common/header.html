@@ -1,4 +1,4 @@
-//<script type="text/discourse-plugin" version="0.8.42">
+<script type="text/discourse-plugin" version="0.8.42">
 let componentSelector = 'div[data-masonry-gallery]',
     componentName = 'data-masonry-gallery',
     padding = 6,
@@ -14,6 +14,7 @@ let componentSelector = 'div[data-masonry-gallery]',
 let cookedWidth = 690,
     previwWidth = 690,
     numberOfColumns = window.matchMedia('(max-width: 774px)').matches ? max_columns-1 : max_columns;
+    console.log(numberOfColumns);
 if (mobileView && documentWidth > 890) {
   numberOfColumns = max_columns-1;
   cookedWidth = 550;
@@ -32,9 +33,12 @@ if (mobileView && documentWidth > 890) {
 } else if (documentWidth < 1475) {
   previwWidth = documentWidth * 0.45;
 }
+console.log(numberOfColumns);
 
 let cookedColumnWidth = Math.floor((cookedWidth - numberOfColumns * padding) / numberOfColumns);
 let previewColumnWidth = Math.floor((previwWidth - numberOfColumns * padding) / numberOfColumns);
+console.log(cookedColumnWidth);
+console.log(previewColumnWidth);
 
 
 let translations = I18n.translations[I18n.currentLocale()].js;
@@ -176,7 +180,8 @@ function componentPrep(cooked) {
       gallery.firstChild.remove()
     }
 
-    let imageHeightsWithPaddingGrid = [[],[],[]];
+    //let imageHeightsWithPaddingGrid = [[],[],[],[],[]];
+    let imageHeightsWithPaddingGrid = Array(max_columns).fill(new Array);
 
     images.forEach(function(image, index) {
       if (horizontalOrder && !gridView) image.style.order = 1 + index % numberOfColumns;
@@ -234,4 +239,4 @@ api.onToolbarCreate(function(toolbar) {
   });
 });
 
-//</script>
+</script>
